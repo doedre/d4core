@@ -7,36 +7,26 @@ Generic concepts and utilities to ease the development of actor-based software.
 In order to provide support for static component registration you should write a base class for it
 
 ```cpp
-class component_base
+class component
 {
 public:
+    // Satisfy constraints of d4::is_static_registrable_base<T>
 	using identifier_type = std::string;
-
-	// Satisfy concept requirements
-	virtual ~component_base() {}	// Should be abstract
-	virtual identifier_type get_identifier() = 0;	// Provide basic information
 
 	// Any custom functions
 	virtual void run() = 0;
 };
 ```
 
-Then inherit it with CRTP `d4::static_factory_registration<T>` to register it
+Then inherit it with CRTP `d4::static_factory_registration<BaseT, T>` to register it
 ```cpp
-class component final : public component_base, public d4::static_factory_registration<component>
+class example final : public d4::static_factory_registration<component, example>
 {
 public:
-	using base = actor_base;
-
 	component()
 	{
 		// Macro to help overcome static variable initialization problems
 		D4_STATIC_REGISTER;
-	}
-
-	virtual base::identifier_type get_identifier() override
-	{
-		return identifier;
 	}
 
 	virtual void run() override
@@ -44,17 +34,20 @@ public:
 		printf("Component has been activated\n");
 	}
 
-	constexpr static base::identifier_type identifier = "component";
+	constexpr static component::identifier_type identifier()
+    {
+        return "component";
+    }
 };
 ```
 
 Finally, you can create this component with static factory instance
 
 ```cpp
-using custom_factory = d4::static_factory<component_base>;
+using component_factory = d4::static_factory<component>;
 
-const auto factory = custom_factory::get_instance();
-const auto comp = factory->make("component");
+const auto factory = component_factory::get_instance();
+const auto comp = factory->make("example");
 if (comp)
 	comp->run();
 ```

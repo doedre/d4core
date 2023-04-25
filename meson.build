@@ -4,13 +4,14 @@ project('d4core', 'cpp',
 
 tests_dir = join_paths(meson.source_root(), 'tests')
 
+ut_dep = dependency('boost.ut', required : true)
 d4core_dep = declare_dependency(
   include_directories : 'include'
 )
 
 static_factory_test = executable('static_factory_test',
   'tests/static_factory.cpp',
-  dependencies : d4core_dep
+  dependencies : [ d4core_dep, ut_dep ]
 )
 
 test('Static factory test', static_factory_test)

@@ -1,50 +1,70 @@
 #include <d4/static_factory.hpp>
 
-class actor_base
-{
-public:
-    using identifier_type = std::string;
+#include <boost/ut.hpp>
 
-    virtual ~actor_base() {}
-    virtual identifier_type get_identifier() = 0;
-    virtual void run() = 0;
+class component
+{
+ public:
+  using identifier_type = std::string;
 };
 
-class test_actor : public actor_base, public d4::static_factory_registration<test_actor>
+class example :
+    public d4::static_factory_registration<component, example>
 {
-public:
-    using base = actor_base;
+ public:
+  example()
+  {
+    D4_STATIC_REGISTER;
+  }
 
-    test_actor()
-    {
-        D4_STATIC_REGISTER;
-    }
-
-    virtual base::identifier_type get_identifier() override
-    {
-        return identifier;
-    }
-
-    virtual void run() override
-    {
-        printf("Test actor been activated\n");
-    }
-
-    constexpr static base::identifier_type identifier = "test_actor";
+  static constexpr component::identifier_type identifier()
+  {
+    return "example";
+  }
 };
-
-using d4_static_actor_factory = d4::static_factory<actor_base>;
 
 int main()
 {
-    const auto actor_name = test_actor::identifier;
+  using namespace boost::ut;
+  using namespace boost::ut::bdd;
 
-    const auto f = d4_static_actor_factory::get_instance();
-    const auto actor = f->make("test_actor");
-    if (actor == nullptr)
-        printf("actor %s cannot be created\n", actor_name.c_str());
-    else
-        actor->run();
+//  cfg<override> = { .tag = {"todo"}};
 
-    return 0;
+  feature("static_factory") = [] {
+    scenario("Get registered and unregistered components") = [] {
+      given("I have static factory with `example` component") = [] {
+        using static_component_factory = d4::static_factory<component>;
+
+        const auto sf = static_component_factory::get_instance();
+        expect((sf != nullptr) >> fatal);
+
+        when("I make `example` component") = [&sf] {
+          const auto comp = sf->make("example");
+
+          then("It should be created normally") = [&comp] {
+            expect(comp != nullptr);
+          };
+        };
+
+        when("I make `missing` component") = [&sf] {
+          const auto comp = sf->make("missing");
+
+          then("It should return nullptr") = [&comp] {
+            expect(comp == nullptr);
+          };
+        };
+      };
+    };
+
+    tag("todo") / scenario("Factory with errors throws on make()") = [] {
+      given("I have static factory with two `example` components") = [] {
+        using static_component_factory = d4::static_factory<>;
+
+        const auto sf = static_component_factory::get_instance();
+        expect((sf == nullptr) >> fatal);
+      };
+    };
+  };
+
+  return 0;
 }
