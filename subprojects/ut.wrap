@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/boost-ext/ut
+revision = v1.1.9
+depth = 1
+
+[provide]
+dependency_names = ut, ut-1.1.9, boost.ut
+
