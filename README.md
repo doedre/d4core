@@ -22,8 +22,11 @@ Then inherit it with CRTP `d4::static_factory_registration<BaseT, T>` to registe
 ```cpp
 class example final : public d4::static_factory_registration<component, example>
 {
+private:
+    using base = component;
+
 public:
-    component()
+    example()
     {
         // Macro to help overcome static variable initialization problems
       	D4_STATIC_REGISTER;
@@ -34,7 +37,7 @@ public:
         printf("Component has been activated\n");
     }
 
-    constexpr static component::identifier_type identifier()
+    constexpr static base::identifier_type identifier()
     {
         return "component";
     }
